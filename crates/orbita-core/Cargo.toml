@@ -1,0 +1,19 @@
+[package]
+name = "orbita-core"
+description = "Conversões do Órbita: independente de interface e de sistema operacional."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+log.workspace = true
+pdfium-render = { version = "0.9", default-features = false, features = ["pdfium_7881", "image_latest", "thread_safe"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "bmp", "ico"] }
+jpeg-encoder = "0.7"
+libwebp-sys = "0.14"
+lopdf = "0.46"
+
+[dev-dependencies]
+tempfile = "3"
