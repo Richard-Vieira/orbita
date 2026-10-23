@@ -1,7 +1,8 @@
-﻿# Instala (ou atualiza) o Órbita pelo terminal, a partir da última versão
+# Instala (ou atualiza) o Órbita pelo terminal, a partir da última versão
 # publicada em https://github.com/Richard-Vieira/orbita/releases
 #
 # Uso (PowerShell):
+# (arquivo salvo SEM BOM de propósito: o "irm | iex" quebraria com ele)
 #   irm https://raw.githubusercontent.com/Richard-Vieira/orbita/main/scripts/install.ps1 | iex
 #
 # O que ele faz:
@@ -28,8 +29,10 @@ Write-Host "Baixando $($asset.name) ($([math]::Round($asset.size / 1MB, 1)) MB).
 Invoke-WebRequest $asset.browser_download_url -OutFile $setup -UseBasicParsing
 
 if ($sums) {
-    $expected = ((Invoke-WebRequest $sums.browser_download_url -UseBasicParsing).Content -split "`n" |
-        Where-Object { $_ -like "*$($asset.name)*" } | Select-Object -First 1) -split '\s+' | Select-Object -First 1
+    $sumsFile = Join-Path $dir 'SHA256SUMS.txt'
+    Invoke-WebRequest $sums.browser_download_url -OutFile $sumsFile -UseBasicParsing
+    $line = Get-Content $sumsFile | Where-Object { $_ -like "*$($asset.name)*" } | Select-Object -First 1
+    $expected = if ($line) { ($line.Trim() -split '\s+')[0] } else { $null }
     $actual = (Get-FileHash -Algorithm SHA256 $setup).Hash
     if (-not $expected -or $actual -ne $expected.ToUpper()) {
         Remove-Item $setup -Force
