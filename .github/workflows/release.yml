@@ -14,7 +14,7 @@ jobs:
     name: Instalador Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Conferir versão da tag
         shell: pwsh
@@ -23,7 +23,7 @@ jobs:
           $conf = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
           if ($tag -ne $conf) { throw "A tag ($tag) não bate com a versão em tauri.conf.json ($conf)." }
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
