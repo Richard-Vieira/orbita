@@ -1,0 +1,26 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / interface
+node_modules/
+/dist/
+*.local
+
+# Binários baixados por scripts (pdfium etc.)
+/vendor/
+
+# Gerados pelo Tauri
+/src-tauri/gen/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
+
+# Arquivos temporários do Órbita
+*.orbita-tmp

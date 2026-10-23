@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = ["crates/orbita-core", "crates/orbita-platform", "crates/orbita-cli", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Richard-Vieira/orbita"
+authors = ["Richard Vieira"]
+
+[workspace.dependencies]
+orbita-core = { path = "crates/orbita-core" }
+orbita-platform = { path = "crates/orbita-platform" }
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+log = "0.4"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+panic = "unwind"

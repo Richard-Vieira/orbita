@@ -1,0 +1,13 @@
+[package]
+name = "orbita-cli"
+description = "Linha de comando do Órbita (testes, CI e integrações de gerenciadores de arquivos)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "orbita-cli"
+path = "src/main.rs"
+
+[dependencies]
+orbita-core.workspace = true
