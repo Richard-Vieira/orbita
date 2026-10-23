@@ -41,21 +41,7 @@ impl Engine {
 
     /// Opções disponíveis para os arquivos selecionados.
     pub fn actions_for(&self, inputs: &[PathBuf]) -> Vec<ActionInfo> {
-        let formats: Option<Vec<Format>> = inputs.iter().map(|p| Format::from_path(p)).collect();
-        let Some(formats) = formats.filter(|f| !f.is_empty()) else { return Vec::new() };
-
-        self.converters
-            .iter()
-            .filter(|c| match c.mode() {
-                Mode::Combine => formats.len() >= 2,
-                Mode::PerFile => {
-                    formats.iter().all(|&f| c.accepts(f))
-                        // Não oferece "PNG" quando tudo já é PNG.
-                        && !formats.iter().all(|&f| Some(f) == c.output_format())
-                }
-            })
-            .map(|c| ActionInfo { id: c.id(), label: c.label(), icon: c.icon() })
-            .collect()
+        available_actions(&self.converters, inputs)
     }
 
     /// Executa uma ação. `progress` recebe valores de 0.0 a 1.0.
@@ -82,6 +68,30 @@ impl Engine {
             Mode::PerFile => run_each(converter.as_ref(), &ctx, inputs),
         }
     }
+}
+
+/// Opções disponíveis para os arquivos selecionados, sem precisar de um
+/// [`Engine`] (não carrega o pdfium).
+pub fn actions_for(inputs: &[PathBuf]) -> Vec<ActionInfo> {
+    available_actions(&converters::all(), inputs)
+}
+
+fn available_actions(converters: &[Box<dyn Converter>], inputs: &[PathBuf]) -> Vec<ActionInfo> {
+    let formats: Option<Vec<Format>> = inputs.iter().map(|p| Format::from_path(p)).collect();
+    let Some(formats) = formats.filter(|f| !f.is_empty()) else { return Vec::new() };
+
+    converters
+        .iter()
+        .filter(|c| match c.mode() {
+            Mode::Combine => formats.len() >= 2,
+            Mode::PerFile => {
+                formats.iter().all(|&f| c.accepts(f))
+                    // Não oferece "PNG" quando tudo já é PNG.
+                    && !formats.iter().all(|&f| Some(f) == c.output_format())
+            }
+        })
+        .map(|c| ActionInfo { id: c.id(), label: c.label(), icon: c.icon() })
+        .collect()
 }
 
 /// Aplica um conversor de arquivo único a cada arquivo da seleção. Se alguns
