@@ -1,6 +1,6 @@
 [package]
 name = "orbita-platform"
-description = "Integração do Órbita com o sistema operacional (Windows hoje, Linux depois)."
+description = "Integração do Órbita com o sistema operacional (Windows e Linux)."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

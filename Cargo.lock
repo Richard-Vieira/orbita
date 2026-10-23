@@ -2737,7 +2737,7 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "orbita"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "base64 0.22.1",
  "image",
@@ -2754,14 +2754,14 @@ dependencies = [
 
 [[package]]
 name = "orbita-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "orbita-core",
 ]
 
 [[package]]
 name = "orbita-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "image",
  "jpeg-encoder",
@@ -2776,7 +2776,7 @@ dependencies = [
 
 [[package]]
 name = "orbita-platform"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "log",
  "thiserror 2.0.21",

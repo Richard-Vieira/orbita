@@ -1,7 +1,8 @@
 name: Release
 
-# Gera o instalador e publica em Releases ao enviar uma tag de versão:
-#   git tag v0.1.0 && git push origin v0.1.0
+# Gera os instaladores (Windows e Linux) e publica todos na mesma versão em
+# Releases ao enviar uma tag de versão:
+#   git tag v0.2.0 && git push origin v0.2.0
 on:
   push:
     tags: ['v*']
@@ -44,17 +45,85 @@ jobs:
           npm ci
           npm run tauri build
 
-      - name: Publicar em Releases
+      - name: Separar o instalador
         shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          New-Item -ItemType Directory -Force out | Out-Null
+          $built = Get-ChildItem target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          # Nome sem acento: o GitHub altera caracteres especiais em anexos.
+          Copy-Item $built.FullName "out/Orbita_${version}_x64-setup.exe"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: out/*
+
+  linux:
+    name: Pacotes Linux
+    # A versão mais antiga suportada: o que é gerado aqui roda nas mais novas.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Dependências do sistema (WebKitGTK etc.)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev patchelf file
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: orbita-linux
+          save-if: false
+
+      - name: Baixar pdfium (versão fixa, SHA-256 conferido)
+        run: sh scripts/fetch-pdfium.sh
+
+      - name: Gerar .deb e .AppImage
+        run: |
+          npm ci
+          npm run tauri build
+
+      - name: Separar os pacotes
+        run: |
+          version='${{ github.ref_name }}'
+          version="${version#v}"
+          mkdir -p out
+          # Nomes sem acento: o GitHub altera caracteres especiais em anexos.
+          cp target/release/bundle/deb/*.deb "out/Orbita_${version}_amd64.deb"
+          cp target/release/bundle/appimage/*.AppImage "out/Orbita_${version}_amd64.AppImage"
+          ls -la out
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux
+          path: out/*
+
+  publish:
+    name: Publicar em Releases
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Publicar
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $version = '${{ github.ref_name }}'.TrimStart('v')
-          $built = Get-ChildItem target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
-          # Nome sem acento: o GitHub altera caracteres especiais em anexos.
-          $name = "Orbita_${version}_x64-setup.exe"
-          Copy-Item $built.FullName $name
-          '{0}  {1}' -f (Get-FileHash -Algorithm SHA256 $name).Hash.ToLower(), $name |
-            Set-Content -Encoding utf8NoBOM SHA256SUMS.txt
-          gh release create '${{ github.ref_name }}' $name SHA256SUMS.txt `
-            --title "Órbita ${{ github.ref_name }}" --notes-file .github/release-notes.md
+          cd out
+          sha256sum Orbita_* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release create '${{ github.ref_name }}' Orbita_* SHA256SUMS.txt \
+            --title "Órbita ${{ github.ref_name }}" --notes-file ../.github/release-notes.md

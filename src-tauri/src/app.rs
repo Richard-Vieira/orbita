@@ -63,13 +63,16 @@ pub fn run(args: Vec<String>) {
             }
             start_shell_server(&handle);
 
-            if let Err(e) = app.global_shortcut().register(SHORTCUT) {
-                log::warn!("atalho {SHORTCUT}: {e}");
-                toast::info(&handle, "Atalho indisponível", &format!("{SHORTCUT_TEXT} já é usado por outro programa."));
+            // No Linux o atalho não tem como ler a seleção do gerenciador de arquivos.
+            if cfg!(windows) {
+                if let Err(e) = app.global_shortcut().register(SHORTCUT) {
+                    log::warn!("atalho {SHORTCUT}: {e}");
+                    toast::info(&handle, "Atalho indisponível", &format!("{SHORTCUT_TEXT} já é usado por outro programa."));
+                }
             }
 
             if first_run(&handle) {
-                // Versões de desenvolvimento não se cadastram para iniciar com o Windows.
+                // Versões de desenvolvimento não se cadastram para iniciar com o sistema.
                 if !cfg!(debug_assertions) {
                     let _ = registration::set_autostart(true);
                 }
@@ -111,11 +114,12 @@ fn start_shell_server(app: &AppHandle) {
 }
 
 pub fn show_help(app: &AppHandle) {
-    toast::info(
-        app,
-        "Órbita está ativo",
-        &format!("Botão direito num arquivo › Converter com Órbita, ou {SHORTCUT_TEXT}."),
-    );
+    let how = if cfg!(windows) {
+        format!("Botão direito num arquivo › Converter com Órbita, ou {SHORTCUT_TEXT}.")
+    } else {
+        "Botão direito num arquivo › Converter com Órbita (no Nautilus, em Scripts; ou em Abrir com).".to_string()
+    };
+    toast::info(app, "Órbita está ativo", &how);
 }
 
 /// Na primeira execução cria um marcador na pasta de dados do app.

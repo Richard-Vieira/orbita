@@ -9,7 +9,7 @@ use crate::{app, registration, toast};
 pub fn create(app: &AppHandle) -> tauri::Result<()> {
     let title = MenuItemBuilder::with_id("title", "Órbita").enabled(false).build(app)?;
     let help = MenuItemBuilder::with_id("help", "Como usar").build(app)?;
-    let autostart = CheckMenuItemBuilder::with_id("autostart", "Iniciar com o Windows")
+    let autostart = CheckMenuItemBuilder::with_id("autostart", if cfg!(windows) { "Iniciar com o Windows" } else { "Iniciar com o sistema" })
         .checked(registration::autostart_enabled())
         .build(app)?;
     let quit = MenuItemBuilder::with_id("quit", "Sair").build(app)?;

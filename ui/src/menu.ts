@@ -344,7 +344,13 @@ document.addEventListener('click', (e) => {
     if (r > R_OUT + 4 || (r > R_HUB && r < R_IN - 4)) void close(`clique fora (${Math.round(e.clientX)}, ${Math.round(e.clientY)}) em ${(target as Element).tagName}`);
   }
 });
-window.addEventListener('blur', () => void close('perdeu o foco'));
+// A notificação pode pegar o foco por um instante (no Linux o app o devolve
+// logo em seguida): só fecha se o foco não voltar.
+window.addEventListener('blur', () => {
+  window.setTimeout(() => {
+    if (!document.hasFocus()) void close('perdeu o foco');
+  }, 150);
+});
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
 void Promise.all([

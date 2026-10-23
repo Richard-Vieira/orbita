@@ -4,11 +4,17 @@
 
 # Órbita
 
-**Converta arquivos direto do Explorer, num menu radial.**
+**Converta arquivos direto do gerenciador de arquivos, num menu radial.**
 Clique com o botão direito num PDF ou numa imagem, escolha o formato e pronto:
 o arquivo novo aparece ao lado do original.
 
-Leve · rápido · 100% local · código aberto (MIT)
+Leve · rápido · 100% local · código aberto (MIT) · Windows e Linux
+
+[**⬇ Baixar para Windows**](https://github.com/Richard-Vieira/orbita/releases/latest/download/Orbita_0.2.0_x64-setup.exe)
+&nbsp;·&nbsp;
+[**⬇ Baixar para Linux (.deb)**](https://github.com/Richard-Vieira/orbita/releases/latest/download/Orbita_0.2.0_amd64.deb)
+&nbsp;·&nbsp;
+[Outros downloads](https://github.com/Richard-Vieira/orbita/releases/latest)
 
 <img src="docs/images/menu-claro.png" width="380" alt="Menu radial do Órbita no tema claro" />
 <img src="docs/images/menu-escuro.png" width="380" alt="Menu radial do Órbita no tema escuro, com o arquivo novo ao lado" />
@@ -34,6 +40,15 @@ Leve · rápido · 100% local · código aberto (MIT)
 
 ## Instalar
 
+Baixe só a versão do seu sistema. Todas ficam na página de
+[Releases](https://github.com/Richard-Vieira/orbita/releases/latest):
+
+| Sistema | Arquivo |
+|---|---|
+| **Windows 10 e 11** | `Orbita_..._x64-setup.exe` |
+| **Linux**: Ubuntu, Debian, Mint, Pop!_OS… | `Orbita_..._amd64.deb` |
+| **Linux**: outras distribuições (Fedora, Arch…) | `Orbita_..._amd64.AppImage` |
+
 ### Windows 10 e 11
 
 **Pelo terminal (PowerShell):**
@@ -53,24 +68,51 @@ baixe o `Orbita_..._x64-setup.exe` e abra.
 
 O instalador tem cerca de **5 MB**. O Órbita inicia com o Windows e fica na bandeja do sistema.
 
-### Linux
+### Linux (em teste)
 
-Em desenvolvimento. O projeto já está organizado para isso: o núcleo de conversões é o mesmo
-e só a integração com o sistema muda (veja [Estrutura](#estrutura-do-projeto)). A ideia é
-acionar o Órbita pelo menu do gerenciador de arquivos (Nautilus, Dolphin, Nemo, Thunar).
+**Pelo terminal:**
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Richard-Vieira/orbita/main/scripts/install.sh | sh
+```
+
+O script baixa a última versão, confere o SHA-256 e instala: o `.deb` no Ubuntu, Debian, Mint
+e derivados (pede a senha de administrador) ou o `.AppImage` em `~/.local/bin` nas outras
+distribuições.
+
+**Ou baixe o pacote:** em [Releases](https://github.com/Richard-Vieira/orbita/releases/latest),
+baixe o `.deb` e abra (ou `sudo apt install ./Orbita_..._amd64.deb`). Com o `.AppImage`:
+`chmod +x Orbita_..._amd64.AppImage` e abra. (No Ubuntu 24.04 ou mais novo, o AppImage precisa do
+pacote `libfuse2t64`; prefira o `.deb`.)
+
+Na primeira vez que abre, o Órbita cria o item **Converter com Órbita** no botão direito:
+
+| Gerenciador de arquivos | Onde aparece |
+|---|---|
+| **Arquivos / Nautilus** (GNOME, Ubuntu) | Botão direito › **Scripts** › Converter com Órbita |
+| **Dolphin** (KDE) | Botão direito › Converter com Órbita |
+| **Nemo** (Cinnamon, Mint) | Botão direito › Converter com Órbita |
+| **Thunar** (XFCE) | Botão direito › Converter com Órbita |
+| **Todos** | Botão direito › **Abrir com** › Converter com Órbita |
+
+Se o item não aparecer, feche e abra o gerenciador de arquivos.
 
 ## Como usar
 
 1. **Botão direito** num arquivo → **Converter com Órbita**
-   (no Windows 11, fica em **Mostrar mais opções**; use o atalho abaixo para ir mais rápido).
-2. Ou selecione o arquivo no Explorer ou na área de trabalho e aperte **Ctrl + Alt + Espaço**.
+   (no Windows 11, fica em **Mostrar mais opções**; use o atalho abaixo para ir mais rápido.
+   No Linux, veja a tabela acima).
+2. No Windows, também dá para selecionar o arquivo no Explorer ou na área de trabalho e apertar
+   **Ctrl + Alt + Espaço**.
 3. Clique numa fatia. O progresso aparece na própria fatia e, ao terminar, uma notificação
    discreta mostra o arquivo criado, com o botão **Abrir pasta**.
 4. **Esc** ou um clique fora fecha o menu.
 
 <img src="docs/images/notificacao.png" width="380" alt="Notificação do Órbita com o botão Abrir pasta" />
 
-Pelo ícone na bandeja dá para desligar a opção **Iniciar com o Windows** ou sair do Órbita.
+Pelo ícone na bandeja dá para desligar a opção **Iniciar com o Windows** (no Linux, **Iniciar
+com o sistema**) ou sair do Órbita. No GNOME, o ícone só aparece com a extensão de
+*AppIndicator* (o Ubuntu já vem com ela).
 
 ### Detalhes de cada conversão
 
@@ -90,8 +132,16 @@ Pelo ícone na bandeja dá para desligar a opção **Iniciar com o Windows** ou 
 
 ## Desinstalar
 
-**Configurações → Aplicativos → Órbita → Desinstalar.** O desinstalador remove tudo, inclusive
-o item do menu do botão direito e o início automático.
+**Windows:** **Configurações → Aplicativos → Órbita → Desinstalar.** O desinstalador remove tudo,
+inclusive o item do menu do botão direito e o início automático.
+
+**Linux:** primeiro remova o item do botão direito e o início automático (eles ficam na sua pasta
+pessoal), depois o pacote:
+
+```sh
+orbita --unregister          # com o AppImage: ~/.local/bin/orbita.AppImage --unregister
+sudo apt remove orbita       # .deb; com o AppImage, apague o arquivo
+```
 
 ## Desempenho
 
@@ -119,7 +169,7 @@ cd orbita
 ./scripts/fetch-pdfium.ps1     # baixa o pdfium numa versão fixa (Linux: sh scripts/fetch-pdfium.sh)
 npm install
 npm run tauri dev              # roda o app em modo de desenvolvimento
-npm run tauri build            # gera o instalador em target/release/bundle/nsis
+npm run tauri build            # gera o instalador em target/release/bundle/ (nsis; no Linux deb e appimage)
 cargo test --workspace         # testes (geram os próprios arquivos de teste)
 ```
 
@@ -138,11 +188,13 @@ cargo run -p orbita-cli -- converter pdf.compress arquivo.pdf
 Atualize a versão em `src-tauri/tauri.conf.json`, `Cargo.toml` e `package.json` e crie a tag:
 
 ```powershell
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
-O GitHub Actions gera o instalador e publica em Releases.
+O GitHub Actions gera o instalador do Windows e os pacotes do Linux e publica todos na mesma
+versão em Releases, com um `SHA256SUMS.txt` só. Os links "Baixar para…" do topo deste README
+levam a versão no nome do arquivo: atualize-os junto.
 
 ### Estrutura do projeto
 
@@ -151,8 +203,8 @@ orbita/
 ├─ crates/
 │  ├─ orbita-core/       conversões (sem interface e sem código de sistema operacional)
 │  │  └─ src/converters/ um arquivo por conversão
-│  ├─ orbita-platform/   integração com o sistema: windows/ hoje, linux/ depois
-│  └─ orbita-cli/        linha de comando (testes, CI e futuras integrações no Linux)
+│  ├─ orbita-platform/   integração com o sistema: windows/ e linux/
+│  └─ orbita-cli/        linha de comando (testes e CI)
 ├─ src-tauri/            app: janelas, bandeja, atalho, fila de conversões, instalador
 ├─ ui/                   menu radial e notificação (TypeScript, sem framework)
 ├─ scripts/              pdfium com versão fixa e instalação pelo terminal
@@ -178,6 +230,9 @@ uma forma ao mesmo tempo leve e confiável de convertê-los sem depender de prog
   exige um pacote com assinatura digital paga.
 - Sem assinatura digital, o Windows mostra o aviso do SmartScreen na instalação. Em alguns
   PCs com o **Controle Inteligente de Aplicativos** ligado, a instalação pode ser bloqueada.
+- **Linux (em teste):** o atalho Ctrl+Alt+Espaço e o efeito de vidro atrás do menu ainda não
+  existem (o menu tem fundo sólido). No Wayland, o Órbita roda pelo XWayland para conseguir
+  abrir o menu junto do mouse. Por enquanto só há versão para x86_64.
 - PDFs protegidos por senha não são convertidos (o Órbita avisa).
 - Não há OCR: PDFs digitalizados não viram texto.
 

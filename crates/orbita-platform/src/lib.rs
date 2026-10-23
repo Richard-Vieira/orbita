@@ -1,8 +1,9 @@
 //! Integração do Órbita com o sistema operacional.
 //!
 //! A API pública é a mesma em todos os sistemas; cada um implementa o que
-//! consegue. No Linux (ainda não implementado) as funções retornam
-//! `Unsupported`/`None` e o app usa alternativas.
+//! consegue. O que um sistema não tem (no Linux: seleção do gerenciador de
+//! arquivos, captura de tela) retorna `Unsupported`/`None` e o app usa
+//! alternativas.
 
 use std::path::{Path, PathBuf};
 

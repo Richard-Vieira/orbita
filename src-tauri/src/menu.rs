@@ -75,7 +75,12 @@ pub fn open(app: &AppHandle, files: Vec<PathBuf>, point: Option<(i32, i32)>) {
     let _guard = OPENING.lock().unwrap_or_else(|e| e.into_inner());
     let files: Vec<PathBuf> = files.into_iter().filter(|p| p.is_file()).collect();
     if files.is_empty() {
-        toast::info(app, "Nenhum arquivo selecionado", "Selecione um arquivo no Explorer ou na área de trabalho.");
+        let hint = if cfg!(windows) {
+            "Selecione um arquivo no Explorer ou na área de trabalho."
+        } else {
+            "Clique com o botão direito num arquivo › Converter com Órbita."
+        };
+        toast::info(app, "Nenhum arquivo selecionado", hint);
         return;
     }
     crate::lifecycle::touch(app);
@@ -88,16 +93,22 @@ pub fn open(app: &AppHandle, files: Vec<PathBuf>, point: Option<(i32, i32)>) {
         std::thread::sleep(std::time::Duration::from_millis(60));
     }
 
-    let (cx, cy) = point.or_else(orbita_platform::cursor_position).unwrap_or((0, 0));
-    let monitor = app
-        .monitor_from_point(cx as f64, cy as f64)
-        .ok()
-        .flatten()
+    // No Linux a posição do mouse vem do Tauri (X11/XWayland); sem ela, o menu
+    // abre no meio da tela.
+    let point = point
+        .or_else(orbita_platform::cursor_position)
+        .or_else(|| app.cursor_position().ok().map(|p| (p.x.round() as i32, p.y.round() as i32)));
+    let monitor = point
+        .and_then(|(cx, cy)| app.monitor_from_point(cx as f64, cy as f64).ok().flatten())
         .or_else(|| app.primary_monitor().ok().flatten());
     let (scale, area) = match &monitor {
         Some(m) => (m.scale_factor(), Some(*m.work_area())),
         None => (1.0, None),
     };
+    let (cx, cy) = point.unwrap_or_else(|| match area {
+        Some(a) => (a.position.x + a.size.width as i32 / 2, a.position.y + a.size.height as i32 / 2),
+        None => (0, 0),
+    });
     let size = (SIZE * scale).round() as i32;
     let (mut x, mut y) = (cx - size / 2, cy - size / 2);
     if let Some(area) = area {

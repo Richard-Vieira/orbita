@@ -96,6 +96,14 @@ pub fn show_window(app: &AppHandle) {
         }
     }
     let _ = window.show();
+    // Fora do Windows o show() pega o foco: devolve para o menu aberto, que
+    // fecharia ao perdê-lo.
+    #[cfg(not(windows))]
+    if crate::menu::is_visible(app) {
+        if let Some(menu) = app.get_webview_window(crate::menu::LABEL) {
+            let _ = menu.set_focus();
+        }
+    }
 }
 
 pub fn hide(app: &AppHandle) {
