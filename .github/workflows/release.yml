@@ -1,0 +1,68 @@
+name: Release
+
+# Cria o instalador e publica em Releases ao enviar uma tag de versão:
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Instalador Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: orbita-windows
+          save-if: false
+
+      - name: Baixar pdfium (versão fixa, SHA-256 conferido)
+        shell: pwsh
+        run: ./scripts/fetch-pdfium.ps1
+
+      - run: npm ci
+
+      - name: Gerar instalador e publicar
+        id: tauri
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Órbita ${{ github.ref_name }}
+          releaseBody: |
+            ## Como instalar (Windows 10 e 11)
+
+            1. Baixe o arquivo **`Órbita_..._x64-setup.exe`** abaixo.
+            2. Abra o arquivo. Se aparecer "O Windows protegeu o computador", clique em
+               **Mais informações → Executar assim mesmo** (o instalador ainda não tem
+               assinatura digital paga; o código é aberto neste repositório).
+            3. Pronto: clique com o botão direito num PDF ou imagem → **Converter com Órbita**,
+               ou selecione o arquivo e aperte **Ctrl+Alt+Espaço**.
+
+            Para conferir a integridade do download, compare com o `SHA256SUMS.txt`.
+          releaseDraft: false
+          prerelease: false
+
+      - name: Publicar SHA-256 do instalador
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTS: ${{ steps.tauri.outputs.artifactPaths }}
+        run: |
+          $files = ($env:ARTIFACTS | ConvertFrom-Json) | Where-Object { $_ -like '*.exe' }
+          $lines = foreach ($f in $files) { "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 $f).Hash.ToLower(), (Split-Path $f -Leaf) }
+          $lines | Set-Content -Encoding utf8 SHA256SUMS.txt
+          gh release upload "${{ github.ref_name }}" SHA256SUMS.txt --clobber
