@@ -1,0 +1,142 @@
+body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 10px 14px 14px 10px;
+}
+
+#toast {
+  position: relative;
+  width: 100%;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 8px 24px var(--shadow);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+#toast.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.no-glass #toast {
+  background: var(--surface-solid);
+}
+
+/* Fundo capturado e desfocado, atrás do véu translúcido. */
+.glass {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+}
+
+.toast-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.kind-error .toast-icon {
+  background: color-mix(in srgb, var(--error) 16%, transparent);
+  color: var(--error);
+}
+
+.toast-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.toast-detail,
+.toast-note {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--text-muted);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-word;
+}
+
+.toast-note {
+  -webkit-line-clamp: 1;
+}
+
+.toast-note:empty {
+  display: none;
+}
+
+.toast-action {
+  flex: none;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 140ms ease;
+}
+
+.toast-action:hover {
+  border-color: var(--accent-border);
+}
+
+.toast-action[hidden] {
+  display: none;
+}
+
+.toast-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+#toast:hover .toast-close {
+  opacity: 1;
+}
+
+.demo body {
+  background: linear-gradient(135deg, #c9d3dd, #e8e2da);
+}
+
+.demo[data-theme='dark'] body {
+  background: linear-gradient(135deg, #1d2026, #2a2724);
+}
+
+.demo #toast {
+  backdrop-filter: blur(18px);
+}

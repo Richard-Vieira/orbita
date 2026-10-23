@@ -1,0 +1,87 @@
+/* Paleta neutra (off-white e cinza) com um único destaque azul suave.
+   Segue o tema claro/escuro do sistema. */
+
+:root {
+  color-scheme: light dark;
+  --font: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Inter', 'Ubuntu', 'Cantarell', sans-serif;
+
+  --text: #26282c;
+  --text-muted: #6f737b;
+  --surface: rgba(250, 250, 247, 0.74);
+  --surface-solid: rgba(246, 246, 243, 0.97);
+  --border: rgba(255, 255, 255, 0.85);
+  --edge: rgba(30, 32, 36, 0.08);
+  --shadow: rgba(20, 22, 26, 0.22);
+
+  --accent: #4c7fe0;
+  --accent-soft: rgba(76, 127, 224, 0.16);
+  --accent-border: rgba(76, 127, 224, 0.75);
+  --ok: #2f8a5b;
+  --error: #b5462f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --text: #ececef;
+    --text-muted: #a2a5ad;
+    --surface: rgba(36, 37, 41, 0.72);
+    --surface-solid: rgba(34, 35, 39, 0.97);
+    --border: rgba(255, 255, 255, 0.14);
+    --edge: rgba(0, 0, 0, 0.3);
+    --shadow: rgba(0, 0, 0, 0.45);
+
+    --accent: #7fa6f2;
+    --accent-soft: rgba(127, 166, 242, 0.2);
+    --accent-border: rgba(127, 166, 242, 0.8);
+    --ok: #6cc497;
+    --error: #ec8a72;
+  }
+}
+
+:root[data-theme='dark'] {
+  --text: #ececef;
+  --text-muted: #a2a5ad;
+  --surface: rgba(36, 37, 41, 0.72);
+  --surface-solid: rgba(34, 35, 39, 0.97);
+  --border: rgba(255, 255, 255, 0.14);
+  --edge: rgba(0, 0, 0, 0.3);
+  --shadow: rgba(0, 0, 0, 0.45);
+
+  --accent: #7fa6f2;
+  --accent-soft: rgba(127, 166, 242, 0.2);
+  --accent-border: rgba(127, 166, 242, 0.8);
+  --ok: #6cc497;
+  --error: #ec8a72;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+.icon {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
