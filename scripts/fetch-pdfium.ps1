@@ -1,4 +1,4 @@
-# Baixa o pdfium (bblanchon/pdfium-binaries) numa versão fixa e confere o SHA-256.
+﻿# Baixa o pdfium (bblanchon/pdfium-binaries) numa versão fixa e confere o SHA-256.
 # Uso: powershell -ExecutionPolicy Bypass -File scripts/fetch-pdfium.ps1
 # Resultado: vendor/pdfium/bin/pdfium.dll (a pasta vendor/ não vai para o git).
 #
