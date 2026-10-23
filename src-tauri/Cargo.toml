@@ -18,5 +18,5 @@ log.workspace = true
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-single-instance = "2"
 tauri-plugin-global-shortcut = "2"
-tauri-plugin-autostart = "2"
 base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["png"] }

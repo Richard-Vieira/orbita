@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Órbita",
+  "mainBinaryName": "orbita",
+  "version": "0.1.0",
+  "identifier": "io.github.richardvieira.orbita",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "Richard Vieira",
+    "copyright": "© 2026 Richard Vieira — Licença MIT",
+    "category": "Utility",
+    "shortDescription": "Menu radial para converter arquivos",
+    "longDescription": "Converta PDFs e imagens direto do Explorer: PDF para PNG/JPG/Texto, comprimir e juntar PDFs, imagens para PNG, JPG, WEBP, ícone e PDF. Tudo local.",
+    "licenseFile": "../LICENSE",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
+    "resources": {
+      "../vendor/pdfium/bin/pdfium.dll": "pdfium.dll",
+      "../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md"
+    },
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["PortugueseBR"],
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "windows/hooks.nsh"
+      }
+    }
+  }
+}
