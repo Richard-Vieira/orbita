@@ -62,8 +62,12 @@ pub fn write_png(image: &DynamicImage, icc: Option<&[u8]>, path: &Path) -> Resul
     Ok(())
 }
 
-/// JPEG com tabelas Huffman otimizadas e subamostragem 4:2:0 (arquivos menores
-/// que o codificador padrão da crate `image` na mesma qualidade).
+/// JPEG com subamostragem 4:2:0 (arquivos menores que o codificador da crate
+/// `image` na mesma qualidade).
+///
+/// Não usamos tabelas Huffman otimizadas: combinadas com 4:2:0, o jpeg-encoder
+/// gera arquivos que alguns decodificadores (ex.: zune-jpeg) leem com as cores
+/// erradas. O ganho seria de só ~5%.
 pub fn encode_jpeg(image: &DynamicImage, icc: Option<&[u8]>, quality: u8) -> Result<Vec<u8>> {
     use jpeg_encoder::{ColorType, Encoder, SamplingFactor};
 
@@ -81,7 +85,6 @@ pub fn encode_jpeg(image: &DynamicImage, icc: Option<&[u8]>, quality: u8) -> Res
     let mut out = Vec::new();
     let mut encoder = Encoder::new(&mut out, quality);
     encoder.set_sampling_factor(SamplingFactor::R_4_2_0);
-    encoder.set_optimized_huffman_tables(true);
     if let Some(icc) = icc {
         let _ = encoder.add_icc_profile(icc);
     }
