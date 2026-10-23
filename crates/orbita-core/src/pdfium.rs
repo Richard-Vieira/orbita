@@ -7,10 +7,13 @@ use pdfium_render::prelude::Pdfium;
 
 use crate::error::{ConvertError, Result};
 
+/// O pdfium só pode ser carregado uma vez por processo; todas as instâncias de
+/// [`PdfiumHost`] compartilham o mesmo carregamento.
+static INSTANCE: OnceLock<std::result::Result<Pdfium, String>> = OnceLock::new();
+
 /// Localiza e carrega o pdfium uma única vez, na primeira conversão de PDF.
 pub struct PdfiumHost {
     search_dirs: Vec<PathBuf>,
-    instance: OnceLock<std::result::Result<Pdfium, String>>,
 }
 
 impl PdfiumHost {
@@ -22,11 +25,11 @@ impl PdfiumHost {
             dirs.push(PathBuf::from(dir));
         }
         dirs.extend(search_dirs);
-        Self { search_dirs: dirs, instance: OnceLock::new() }
+        Self { search_dirs: dirs }
     }
 
     pub fn get(&self) -> Result<&Pdfium> {
-        self.instance
+        INSTANCE
             .get_or_init(|| self.load())
             .as_ref()
             .map_err(|e| {
