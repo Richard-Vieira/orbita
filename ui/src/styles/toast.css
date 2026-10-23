@@ -1,13 +1,13 @@
 body {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   justify-content: flex-end;
   padding: 10px 14px 14px 10px;
 }
 
 #toast {
   position: relative;
-  width: 100%;
+  min-width: 0;
   min-height: 70px;
   display: flex;
   align-items: center;
@@ -130,6 +130,9 @@ body {
 }
 
 .demo body {
+  /* tamanho real da janela da notificação */
+  width: 380px;
+  height: 100px;
   background: linear-gradient(135deg, #c9d3dd, #e8e2da);
 }
 
