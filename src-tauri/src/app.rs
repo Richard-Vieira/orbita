@@ -51,8 +51,7 @@ pub fn run(args: Vec<String>) {
             crate::logger::init(handle.path().app_log_dir().ok());
             log::info!("iniciando (args: {args_for_log:?})");
             app.manage(Jobs::start(handle.clone(), pdfium_dirs(&handle)));
-            menu::create(&handle)?;
-            toast::create(&handle)?;
+            // As janelas são criadas só no primeiro uso (veja lifecycle.rs).
             tray::create(&handle)?;
 
             if let Err(e) = registration::ensure_shell_integration() {
@@ -78,8 +77,15 @@ pub fn run(args: Vec<String>) {
             }
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("erro ao iniciar o Órbita");
+        .build(tauri::generate_context!())
+        .expect("erro ao iniciar o Órbita")
+        .run(|_app, event| {
+            // O Órbita fica na bandeja mesmo sem janelas abertas (elas são
+            // descartadas quando ocioso). Só sai pelo "Sair" da bandeja.
+            if let tauri::RunEvent::ExitRequested { code: None, api, .. } = event {
+                api.prevent_exit();
+            }
+        });
 }
 
 /// Abre o menu fora da thread que recebeu o pedido (a captura do fundo e o
@@ -144,6 +150,7 @@ fn pdfium_dirs(app: &AppHandle) -> Vec<PathBuf> {
 fn ui_ready(app: AppHandle, window: tauri::WebviewWindow) {
     match window.label() {
         menu::LABEL if menu::GATE.mark_ready(&app) => menu::show(&app),
+        menu::LABEL => log::info!("menu pronto"),
         toast::LABEL if toast::GATE.mark_ready(&app) => toast::show_window(&app),
         _ => {}
     }

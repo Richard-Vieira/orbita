@@ -41,7 +41,21 @@ impl MenuState {
     }
 }
 
-pub fn create(app: &AppHandle) -> tauri::Result<()> {
+/// Cria a janela (escondida) se ela ainda não existir.
+fn ensure(app: &AppHandle) -> Option<tauri::WebviewWindow> {
+    if let Some(window) = app.get_webview_window(LABEL) {
+        return Some(window);
+    }
+    match create(app) {
+        Ok(window) => Some(window),
+        Err(e) => {
+            log::error!("não foi possível criar o menu: {e}");
+            None
+        }
+    }
+}
+
+fn create(app: &AppHandle) -> tauri::Result<tauri::WebviewWindow> {
     WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("index.html".into()))
         .title("Órbita")
         .inner_size(SIZE, SIZE)
@@ -53,8 +67,7 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
         .skip_taskbar(true)
         .visible(false)
         .focused(true)
-        .build()?;
-    Ok(())
+        .build()
 }
 
 /// Abre o menu para os arquivos dados, no ponto dado (ou na posição do mouse).
@@ -65,7 +78,8 @@ pub fn open(app: &AppHandle, files: Vec<PathBuf>, point: Option<(i32, i32)>) {
         toast::info(app, "Nenhum arquivo selecionado", "Selecione um arquivo no Explorer ou na área de trabalho.");
         return;
     }
-    let Some(window) = app.get_webview_window(LABEL) else { return };
+    crate::lifecycle::touch(app);
+    let Some(window) = ensure(app) else { return };
 
     // Se já estiver aberto, esconde antes de capturar o fundo (senão o
     // próprio menu apareceria na captura).
@@ -113,6 +127,7 @@ pub fn open(app: &AppHandle, files: Vec<PathBuf>, point: Option<(i32, i32)>) {
 pub fn show(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(LABEL) {
         let _ = window.show();
+        log::info!("menu visível");
         if let Err(e) = window.set_focus() {
             log::warn!("menu sem foco: {e}");
         }

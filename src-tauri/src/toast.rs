@@ -23,7 +23,15 @@ pub struct ToastState {
     pub backdrop: Option<String>,
 }
 
-pub fn create(app: &AppHandle) -> tauri::Result<()> {
+/// Cria a janela (escondida) se ela ainda não existir.
+fn ensure(app: &AppHandle) -> Option<tauri::WebviewWindow> {
+    if let Some(window) = app.get_webview_window(LABEL) {
+        return Some(window);
+    }
+    create(app).map_err(|e| log::error!("não foi possível criar a notificação: {e}")).ok()
+}
+
+fn create(app: &AppHandle) -> tauri::Result<tauri::WebviewWindow> {
     WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("toast.html".into()))
         .title("Órbita")
         .inner_size(WIDTH, HEIGHT)
@@ -36,8 +44,7 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
         .visible(false)
         .focused(false)
         .focusable(false)
-        .build()?;
-    Ok(())
+        .build()
 }
 
 pub fn success(app: &AppHandle, title: &str, detail: &str, notes: Vec<String>, path: Option<String>) {
@@ -53,7 +60,8 @@ pub fn info(app: &AppHandle, title: &str, detail: &str) {
 }
 
 fn show(app: &AppHandle, mut state: ToastState) {
-    let Some(window) = app.get_webview_window(LABEL) else { return };
+    crate::lifecycle::touch(app);
+    let Some(window) = ensure(app) else { return };
     let (cx, cy) = orbita_platform::cursor_position().unwrap_or((0, 0));
     let monitor = app
         .monitor_from_point(cx as f64, cy as f64)

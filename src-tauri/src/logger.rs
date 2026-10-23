@@ -23,10 +23,10 @@ impl log::Log for FileLogger {
         if !self.enabled(record.metadata()) || !record.target().starts_with("orbita") {
             return;
         }
-        let secs = std::time::SystemTime::now()
+        let millis = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_secs());
-        let line = format!("{secs} {:<5} {}\n", record.level(), record.args());
+            .map_or(0, |d| d.as_millis());
+        let line = format!("{millis} {:<5} {}\n", record.level(), record.args());
         if cfg!(debug_assertions) {
             eprint!("{line}");
         }

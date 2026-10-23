@@ -35,6 +35,13 @@ impl Gate {
         }
     }
 
+    /// A janela foi destruída: o próximo pedido espera a página carregar de novo.
+    pub fn reset(&self) {
+        let mut pending = self.pending.lock().unwrap_or_else(|e| e.into_inner());
+        self.ready.store(false, Ordering::Release);
+        *pending = None;
+    }
+
     /// Marca a página como pronta e devolve `true` se havia algo guardado
     /// (que já foi emitido).
     pub fn mark_ready(&self, app: &AppHandle) -> bool {

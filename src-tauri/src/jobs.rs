@@ -3,7 +3,8 @@
 
 use std::panic::AssertUnwindSafe;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::sync::mpsc::{self, Sender};
 use std::sync::Mutex;
 
@@ -23,6 +24,8 @@ struct Job {
 pub struct Jobs {
     sender: Mutex<Sender<Job>>,
     next_id: AtomicU64,
+    /// Conversões na fila ou em andamento.
+    pending: Arc<AtomicUsize>,
 }
 
 #[derive(Serialize, Clone)]
@@ -50,20 +53,29 @@ struct Failed {
 impl Jobs {
     pub fn start(app: AppHandle, pdfium_dirs: Vec<PathBuf>) -> Jobs {
         let (sender, receiver) = mpsc::channel::<Job>();
+        let pending = Arc::new(AtomicUsize::new(0));
+        let counter = pending.clone();
         std::thread::Builder::new()
             .name("orbita-jobs".into())
             .spawn(move || {
                 let engine = Engine::new(pdfium_dirs);
                 for job in receiver {
                     run(&app, &engine, job);
+                    counter.fetch_sub(1, Ordering::SeqCst);
+                    crate::lifecycle::touch(&app);
                 }
             })
             .expect("thread de conversões");
-        Jobs { sender: Mutex::new(sender), next_id: AtomicU64::new(1) }
+        Jobs { sender: Mutex::new(sender), next_id: AtomicU64::new(1), pending }
+    }
+
+    pub fn is_idle(&self) -> bool {
+        self.pending.load(Ordering::SeqCst) == 0
     }
 
     pub fn submit(&self, action: String, files: Vec<PathBuf>) -> u64 {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        self.pending.fetch_add(1, Ordering::SeqCst);
         let sender = self.sender.lock().unwrap_or_else(|e| e.into_inner());
         let _ = sender.send(Job { id, action, files });
         id

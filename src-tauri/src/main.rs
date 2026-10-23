@@ -6,6 +6,7 @@ mod backdrop;
 mod files;
 mod gate;
 mod jobs;
+mod lifecycle;
 mod logger;
 mod menu;
 mod registration;
