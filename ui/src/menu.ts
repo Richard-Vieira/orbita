@@ -94,6 +94,7 @@ function render(next: MenuState, animate: boolean): void {
 
   renderHub(next.files);
   hideSatellite();
+  if (next.actions.length === 0) showMessage('Nenhuma conversão disponível para esta seleção', 'error', 8000);
   stage.classList.toggle('animate', animate);
   if (animate) {
     stage.classList.remove('open');
