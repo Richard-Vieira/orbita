@@ -14,8 +14,9 @@ fn engine() -> Engine {
     Engine::new(vec![vendor.join("bin"), vendor.join("lib")])
 }
 
-fn run(engine: &Engine, action: &str, inputs: &[PathBuf]) -> Result<Vec<PathBuf>, ConvertError> {
-    engine.run(action, inputs, &|_| {}, &CancelToken::default()).map(|o| o.created)
+fn run(engine: &Engine, action: &str, inputs: &[&Path]) -> Result<Vec<PathBuf>, ConvertError> {
+    let inputs: Vec<PathBuf> = inputs.iter().map(|p| p.to_path_buf()).collect();
+    engine.run(action, &inputs, &|_| {}, &CancelToken::default()).map(|o| o.created)
 }
 
 /// PNG com transparência (um círculo azul sobre fundo transparente).
@@ -72,20 +73,20 @@ fn image_conversions() {
     let png = make_png(dir.path(), "logo.png", 300, 200);
     let engine = engine();
 
-    let jpg = run(&engine, "img.jpg", &[png.clone()]).unwrap();
+    let jpg = run(&engine, "img.jpg", &[&png]).unwrap();
     assert_eq!(jpg[0].file_name().unwrap(), "logo.jpg");
     // Transparência vira branco no JPG.
     let decoded = image::open(&jpg[0]).unwrap().to_rgb8();
     assert!(decoded.get_pixel(2, 2).0.iter().all(|&c| c > 245));
 
-    let webp = run(&engine, "img.webp", &[png.clone()]).unwrap();
+    let webp = run(&engine, "img.webp", &[&png]).unwrap();
     assert_eq!(image::open(&webp[0]).unwrap().width(), 300);
 
-    let ico = run(&engine, "img.ico", &[png.clone()]).unwrap();
+    let ico = run(&engine, "img.ico", &[&png]).unwrap();
     assert!(fs::metadata(&ico[0]).unwrap().len() > 0);
 
     // Nunca sobrescreve: a segunda conversão ganha o sufixo (1).
-    let again = run(&engine, "img.jpg", &[png]).unwrap();
+    let again = run(&engine, "img.jpg", &[&png]).unwrap();
     assert_eq!(again[0].file_name().unwrap(), "logo (1).jpg");
 }
 
@@ -95,8 +96,8 @@ fn pdf_round_trip() {
     let engine = engine();
     let png = make_png(dir.path(), "foto.png", 400, 300);
 
-    let pdf = run(&engine, "img.pdf", &[png]).unwrap().remove(0);
-    let back = run(&engine, "pdf.png", &[pdf]).unwrap().remove(0);
+    let pdf = run(&engine, "img.pdf", &[&png]).unwrap().remove(0);
+    let back = run(&engine, "pdf.png", &[&pdf]).unwrap().remove(0);
     let page = image::open(back).unwrap();
     // 400 px a 96 dpi = 300 pt; renderizado a 200 dpi = ~833 px.
     assert!((page.width() as i32 - 833).abs() <= 2, "largura {}", page.width());
@@ -108,13 +109,13 @@ fn pdf_text_and_pages() {
     let engine = engine();
     let pdf = make_text_pdf(dir.path(), "texto.pdf");
 
-    let txt = run(&engine, "pdf.txt", &[pdf.clone()]).unwrap();
+    let txt = run(&engine, "pdf.txt", &[&pdf]).unwrap();
     let text = fs::read_to_string(&txt[0]).unwrap();
     assert!(text.contains("Ola Orbita, pagina um."));
     assert!(text.contains("Segunda pagina"));
 
     // Duas páginas -> pasta "texto (JPG)" com uma imagem por página.
-    let folder = run(&engine, "pdf.jpg", &[pdf]).unwrap().remove(0);
+    let folder = run(&engine, "pdf.jpg", &[&pdf]).unwrap().remove(0);
     assert_eq!(folder.file_name().unwrap(), "texto (JPG)");
     assert_eq!(fs::read_dir(folder).unwrap().count(), 2);
 }
@@ -126,7 +127,7 @@ fn merge_pdfs_and_images() {
     let a = make_text_pdf(dir.path(), "a.pdf");
     let b = make_png(dir.path(), "b.png", 200, 200);
 
-    let merged = run(&engine, "merge", &[b, a]).unwrap().remove(0);
+    let merged = run(&engine, "merge", &[&b, &a]).unwrap().remove(0);
     assert_eq!(merged.file_name().unwrap(), "Juntados - a.pdf");
     let doc = lopdf::Document::load(&merged).unwrap();
     assert_eq!(doc.get_pages().len(), 3);
@@ -139,11 +140,11 @@ fn compress_then_report_already_optimized() {
     let pdf = make_text_pdf(dir.path(), "pequeno.pdf");
 
     // Primeira vez: os fluxos sem compactação ficam menores.
-    let compressed = run(&engine, "pdf.compress", &[pdf]).unwrap().remove(0);
+    let compressed = run(&engine, "pdf.compress", &[&pdf]).unwrap().remove(0);
     assert_eq!(compressed.file_name().unwrap(), "pequeno (comprimido).pdf");
 
     // De novo no resultado: nada mais a ganhar.
-    match run(&engine, "pdf.compress", &[compressed]) {
+    match run(&engine, "pdf.compress", &[&compressed]) {
         Err(ConvertError::AlreadyOptimized) => {}
         other => panic!("esperava 'já otimizado', veio {other:?}"),
     }
@@ -165,8 +166,8 @@ fn compress_downsamples_large_photos() {
     let jpg = dir.path().join("foto.jpg");
     photo.save(&jpg).unwrap();
 
-    let pdf = run(&engine, "img.pdf", &[jpg]).unwrap().remove(0);
-    let compressed = run(&engine, "pdf.compress", &[pdf.clone()]).unwrap().remove(0);
+    let pdf = run(&engine, "img.pdf", &[&jpg]).unwrap().remove(0);
+    let compressed = run(&engine, "pdf.compress", &[&pdf]).unwrap().remove(0);
     let (before, after) = (fs::metadata(&pdf).unwrap().len(), fs::metadata(&compressed).unwrap().len());
     assert!(after * 2 < before, "esperava reduzir pela metade: {before} -> {after}");
 }
@@ -176,8 +177,8 @@ fn scanned_pdf_has_no_text() {
     let dir = tempfile::tempdir().unwrap();
     let engine = engine();
     let png = make_png(dir.path(), "scan.png", 300, 300);
-    let pdf = run(&engine, "img.pdf", &[png]).unwrap().remove(0);
-    assert!(matches!(run(&engine, "pdf.txt", &[pdf]), Err(ConvertError::NoText)));
+    let pdf = run(&engine, "img.pdf", &[&png]).unwrap().remove(0);
+    assert!(matches!(run(&engine, "pdf.txt", &[&pdf]), Err(ConvertError::NoText)));
 }
 
 #[test]
