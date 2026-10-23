@@ -16,7 +16,11 @@ pub const SHORTCUT: &str = "Ctrl+Alt+Space";
 const SHORTCUT_TEXT: &str = "Ctrl+Alt+Espaço";
 
 pub fn run(args: Vec<String>) {
-    let started_in_background = args.iter().any(|a| a == "--background");
+    // "--background": início automático com o Windows. "-Embedding": o próprio
+    // Explorer abriu o Órbita para atender o menu do botão direito.
+    let started_in_background = args
+        .iter()
+        .any(|a| a == "--background" || a.eq_ignore_ascii_case("-embedding") || a.eq_ignore_ascii_case("/embedding"));
     let initial_files = existing_files(&args);
     let args_for_log = args.clone();
 
